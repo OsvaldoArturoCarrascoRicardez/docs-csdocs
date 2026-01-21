@@ -6,11 +6,9 @@ import { markdownify } from "@/lib/utils/textConverter";
 import { getTranslations } from "@/lib/utils/languagePerser";
 
 const locale = Astro.currentLocale;
-
 const menu = await getTranslations(locale || "en");
 
 const footer = menu.footer;
-const currentLocal = Astro.currentLocale || "en";
 ---
 
 <footer>
@@ -111,7 +109,7 @@ const currentLocal = Astro.currentLocale || "en";
     </div>
     <div class="bottom-footer">
       <p set:html={markdownify(config?.params?.copyright)} />
-      <a href={currentLocal + "/privacy-policy"}
+      <a href={"/privacy-policy"}
         >{Astro.locals.t("footer.privacy", "Privacy Policy")}</a
       >
     </div>
