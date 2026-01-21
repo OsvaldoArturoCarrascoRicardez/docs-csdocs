@@ -74,6 +74,10 @@
           "link": "/servidores/rocky-linux/"
         },
         {
+          "label": "Rocky Linux 10",
+          "link": "/servidores/rocky-linux-10/"
+        },
+        {
           "label": "WSL2 Windows",
           "link": "/servidores/wsl2-windows/"
         },

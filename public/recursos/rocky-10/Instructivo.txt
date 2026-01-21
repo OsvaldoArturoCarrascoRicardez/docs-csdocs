@@ -1,0 +1,307 @@
+Se instala nginx
+sudo firewall-cmd --permanent --zone=public --add-service=http
+sudo firewall-cmd --permanent --zone=public --add-service=https
+sudo firewall-cmd --reload
+
+**Si usas módulos Nginx adicionales (ej. Proxy Inverso), permite la conexión de red
+sudo setsebool -P httpd_can_network_connect 1
+
+-----------------------------------------------------------------------------
+En nginx.conf, se configura el Bloqueo de scanners automáticos. http {}
+user csdocsapp;
+worker_processes auto;
+error_log /var/log/nginx/error.log notice;
+pid /run/nginx.pid;
+
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    client_max_body_size 4096M;
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    ##
+    ## BLOQUEO DE BOTS POR USER-AGENT (GLOBAL)
+    ##
+    map $http_user_agent $block_bad_agents {
+        default 0;
+        ~*(zgrab|censys|keydrop|fastscan|internetmeasurement|python-requests) 1;
+    }
+
+    include /etc/nginx/conf.d/*.conf;
+}
+
+-----------------------------------------------------------------------------
+crear dentro de snippets/security.conf
+
+##
+## =========================================================
+##  SECURITY HARDENING – GLOBAL (Laravel / PHP)
+## =========================================================
+##
+
+##
+## Bloqueo de archivos ocultos y sensibles
+##
+location ~* /\.(env|git|svn|hg|DS_Store|idea|vscode) {
+    deny all;
+    return 403;
+}
+
+##
+## Bloqueo de archivos de configuración y backups
+##
+location ~* (composer\.json|composer\.lock|package\.json|package-lock\.json|docker-compose|\.ya?ml|\.toml|\.ini|\.log|\.bak|\.old|\.save|\.swp) {
+    deny all;
+    return 403;
+}
+
+##
+## Bloqueo de archivos de certificados y llaves
+##
+location ~* \.(pem|key|crt|csr|pfx|p12)$ {
+    deny all;
+    return 403;
+}
+
+##
+## Bloqueo de path traversal
+##
+location ~* (\.\./|\.\.%2f) {
+    deny all;
+    return 403;
+}
+
+##
+## Bloqueo de ejecución PHP peligrosa
+##
+location ~* (shell\.php|cmd\.php|upl\.php|backdoor\.php|password\.php|info\.php|test\.php) {
+    deny all;
+    return 403;
+}
+
+##
+## Protección contra archivos temporales de editores
+##
+location ~* (~$|\.swp$|\.swo$) {
+    deny all;
+    return 403;
+}
+
+##
+## PERMITIR storage público (storage:link)
+##
+#location ^~ /storage/ {
+#    access_log off;
+#    expires 30d;
+#    add_header Cache-Control "public";
+#    try_files $uri =404;
+#}
+
+##
+## Bloquear storage sensible
+##
+location ~* ^/storage/(logs|framework|app/private)/ {
+    deny all;
+    return 403;
+}
+
+##
+## Evitar acceso a vendor y storage (excepto public)
+##
+location ~* ^/(vendor|bootstrap|config|database|resources|routes|tests)/ {
+    deny all;
+    return 403;
+}
+
+##
+## Bloqueo de métodos HTTP peligrosos
+##
+if ($request_method !~ ^(GET|POST|HEAD|PUT|DELETE|OPTIONS)$) {
+    return 405;
+}
+
+##
+## Headers de seguridad
+##
+add_header X-Frame-Options "DENY" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+
+##
+## Ocultar versión de Nginx
+##
+server_tokens off;
+
+
+-----------------------------------------------------------------------------
+configuracion de aplicacion: frontend expuesto y backend en acceso local 
+redireccionado por ruta
+
+server {
+    listen 81;
+    server_name _;
+
+    if ($block_bad_agents) {
+        return 403;
+    }
+
+    include /etc/nginx/snippets/security.conf;
+
+    # redireccion ruta a backend
+    location /api/ {
+	proxy_pass http://127.0.0.1:8000/api/;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # acepta storage:link
+    location /storage/ {
+        proxy_pass http://127.0.0.1:8000/storage/;
+        proxy_set_header Host $host;
+    }
+
+    # frontend
+    location / {
+	root /var/www/html/CG/ControlGestionFront/dist/ControlGestionFront;
+
+        index index.html;
+
+        access_log /var/log/nginx/CGfront_access.log;
+        error_log  /var/log/nginx/CGfront_error.log error;
+
+        try_files $uri $uri/ /index.html?$query_string;
+    }
+}
+
+server {
+    # acceso solo local
+    listen 127.0.0.1:8000;
+    server_name _;
+
+    if ($block_bad_agents) {
+        return 403;
+    }
+
+    root /var/www/html/CG/controlgestionback/public;
+
+    index index.php;
+
+    charset utf-8;
+
+    access_log /var/log/nginx/CGback_access.log;
+    error_log  /var/log/nginx/CGback_error.log error;
+
+    # inluye la seguridad
+    include /etc/nginx/snippets/security.conf;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.(phar)$ {
+        return 404;
+    }
+
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass unix:/var/opt/remi/php81/run/php-fpm/www.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+	fastcgi_param PATH_INFO $fastcgi_path_info;
+        include fastcgi_params;
+
+        fastcgi_intercept_errors off;
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 8 256k;
+        fastcgi_busy_buffers_size 256k;
+        fastcgi_connect_timeout 600;
+        fastcgi_send_timeout 600;
+        fastcgi_read_timeout 600;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+
+-----------------------------------------------------------------------------
+Configuracion SElinux y firewall (puertos)
+
+**listar servicios y puertos
+semanage port -l | grep http_port_t
+
+**habilitamos puertos tcp en segurdad SElinux
+sudo semanage port -a -t http_port_t -p tcp 81
+sudo semanage port -a -t http_port_t -p tcp 8000
+
+**habilitar comunicacion nginx - backend
+setsebool -P httpd_can_network_connect 1
+
+**listar servicios y puertos
+firewall-cmd --list-all
+
+**habilitamos puerto externo
+sudo firewall-cmd --permanent --zone=public --add-port=81/tcp
+sudo firewall-cmd --reload
+
+nota: el puerto 8000 es interno, no se requieren habilitar en firewall-cmd
+
+-----------------------------------------------------------------------------
+Configuracion permisos a carpetas laravel
+para permitir a nginx/php-fpm escribir en laravel
+aplicar por aplicación:
+semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/CG/controlgestionback/storage(/.*)?"
+semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/CG/controlgestionback/bootstrap/cache(/.*)?"
+restorecon -Rv /var/www/html/CG/controlgestionback
+
+Si surge un error: ValueError: La política SELinux no está administrada o no se puede acceder al almacenamiento.
+instalar: dnf install -y policycoreutils policycoreutils-python-utils
+
+Dar permiso al usuario nginx
+chown -R nginx:nginx /var/www/html/CG/controlgestionback
+chmod -R 775 /var/www/html/CG/controlgestionback/storage
+chmod -R 775 /var/www/html/CG/controlgestionback/bootstrap/cache
+
+
+Reiniciar todo
+systemctl restart php81-php-fpm
+systemctl restart php82-php-fpm
+systemctl restart nginx
+
+
+-----------------------------------------------------------------------------
+Conclusión
+Aspecto	Estado
+Laravel seguro		✅
+Root correcto		✅
+Bots bloqueados		✅
+Escaneo detenido	✅
+PHP hardening		✅
+Ya no estás “abierto a Internet”, ahora estás filtrado.

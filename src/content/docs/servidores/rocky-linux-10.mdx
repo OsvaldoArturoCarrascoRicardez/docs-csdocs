@@ -1,0 +1,323 @@
+---
+title: Rocky Linux 10
+description: Guía avanzada de configuración de servidor Rocky Linux 10 para ambientes de producción CSDOCS.
+---
+
+import { Steps, Tabs, TabItem, Card, Aside } from '@astrojs/starlight/components';
+
+import { LinkButton } from '@astrojs/starlight/components';
+
+# 🏔️ Rocky Linux 10 - Configuración de Producción
+
+Esta guía documenta el procedimiento completo y detallado para la implementación de la suite **CSDOCS** en Rocky Linux 10, basándose en configuraciones reales de servidores de producción.
+
+---
+
+## 🛡️ Preparación del Sistema
+
+### 1. Diagnóstico y Utilidades
+Antes de comenzar, es fundamental verificar las capacidades del hardware y asegurar que el sistema esté actualizado.
+
+```bash
+# Verificar versión y hardware
+cat /etc/*release
+lscpu
+free -m
+df -h
+
+# Actualización e instalación de utilidades
+sudo dnf update -y
+sudo dnf install net-tools htop git dnf-utils-core -y
+```
+
+### 2. Configuración de Entorno
+Establecer la zona horaria correcta es crítico para los logs y procesos programados.
+
+```bash
+sudo timedatectl set-timezone America/Mexico_City
+# Verificar con: timedatectl
+```
+
+---
+
+## 🌐 Servidor Web: Nginx Hardening
+
+Configuración de alta seguridad con bloqueo de bots y optimización para la suite CSDOCS.
+
+### 1. Instalación y Firewall
+```bash
+sudo dnf install -y nginx
+sudo systemctl enable --now nginx
+
+# Apertura de puertos
+sudo firewall-cmd --permanent --zone=public --add-service=http
+sudo firewall-cmd --permanent --zone=public --add-service=https
+sudo firewall-cmd --reload
+```
+
+### 2. Configuración Global (`/etc/nginx/nginx.conf`)
+Optimizar el manejo de archivos grandes y bloquear agentes maliciosos.
+
+```nginx
+user csdocsapp; # Usuario recomendado para ejecución
+worker_processes auto;
+
+http {
+    # Bloqueo de scanners automáticos y bots
+    map $http_user_agent $block_bad_agents {
+        default 0;
+        ~*(zgrab|censys|keydrop|fastscan|internetmeasurement|python-requests) 1;
+    }
+
+    client_max_body_size 4096M; # Máximo permitido para cargas pesadas
+    sendfile on;
+    tcp_nopush on;
+    keepalive_timeout 65;
+    types_hash_max_size 4096;
+    server_tokens off; # Ocultar versión de Nginx
+}
+```
+
+### 3. Snippets de Seguridad (`/etc/nginx/snippets/security.conf`)
+Crea este archivo para consolidar la protección de las aplicaciones:
+
+```nginx
+# Bloqueo de archivos ocultos y sensibles
+location ~* /\.(env|git|svn|hg|DS_Store|idea|vscode) { deny all; return 403; }
+
+# Bloqueo de archivos de configuración y backups
+location ~* (composer\.json|composer\.lock|package\.json|package-lock\.json|docker-compose|\.ya?ml|\.toml|\.ini|\.log|\.bak|\.old|\.save|\.swp) { deny all; return 403; }
+
+# Bloqueo de certificados
+location ~* \.(pem|key|crt|csr|pfx|p12)$ { deny all; return 403; }
+
+# Protección contra ejecución PHP en directorios sensibles
+location ~* ^/storage/(logs|framework|app/private)/ { deny all; return 403; }
+location ~* ^/(vendor|bootstrap|config|database|resources|routes|tests)/ { deny all; return 403; }
+
+# Headers de seguridad
+add_header X-Frame-Options "DENY" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+```
+
+---
+
+## 🐘 Stack PHP Multi-versión (Remi)
+
+Configuración avanzada para correr PHP 8.1 y 8.2 simultáneamente.
+
+### 1. Instalación de Repositorios
+```bash
+sudo dnf install epel-release -y
+sudo dnf install https://rpms.remirepo.net/enterprise/remi-release-10.rpm -y
+```
+
+### 2. Despliegue Paralelo
+```bash
+# Instalación PHP 8.1
+sudo dnf install -y php81-php php81-php-fpm php81-php-cli php81-php-mysqlnd php81-php-gd php81-php-mbstring php81-php-xml php81-php-opcache php81-php-curl php81-php-zip php81-php-exif php81-php-pcntl php81-php-bcmath php81-php-soap
+
+# Instalación PHP 8.2
+sudo dnf install -y php82-php php82-php-fpm php82-php-cli php82-php-mysqlnd php82-php-gd php82-php-mbstring php82-php-xml php82-php-opcache php82-php-curl php82-php-zip php82-php-exif php82-php-pcntl php82-php-bcmath php82-php-soap
+```
+
+### 3. Sockets y Servicios
+Cada versión corre en su propio socket. Verifica la existencia en:
+`ls /var/opt/remi/php*/run/php-fpm`
+
+```bash
+sudo systemctl enable --now php81-php-fpm php82-php-fpm
+```
+
+### 4. Ajustes Cruciales de `php.ini`
+Editar los archivos localizados en `/etc/opt/remi/php8X/php.ini`:
+
+- `memory_limit = 4096M`
+- `upload_max_filesize = 2048M`
+- `post_max_size = 2048M`
+- `max_execution_time = 600`
+- `max_input_time = 600`
+
+---
+
+## 💾 Base de Datos: MySQL 8.4 (Optimizada)
+
+Perfil de alto rendimiento para servidores con **7 GB de RAM**.
+
+### 1. Instalación
+```bash
+sudo dnf install -y https://dev.mysql.com/get/mysql84-community-release-el10-2.noarch.rpm
+sudo dnf install mysql-community-server -y
+sudo systemctl enable --now mysqld
+```
+
+### 2. Configuración de Rendimiento (`/etc/my.cnf`)
+```ini
+[mysqld]
+# CORE & Memory
+innodb_buffer_pool_size = 4G
+innodb_buffer_pool_instances = 4
+innodb_redo_log_capacity = 1G
+innodb_flush_log_at_trx_commit = 2
+innodb_flush_method = O_DIRECT
+
+# Connections
+max_connections = 300
+max_user_connections = 280
+table_open_cache = 2000
+open_files_limit = 65535
+
+# Network
+max_allowed_packet = 256M
+```
+
+### 3. Seguridad Inicial
+Obtener la clave temporal y ejecutar el endurecimiento:
+```bash
+sudo grep 'temporary password' /var/log/mysqld.log
+sudo mysql_secure_installation
+```
+
+---
+
+## ⚡ Servicios y Microservicios
+
+### Redis (Cache & Queues)
+```bash
+sudo dnf module enable redis:remi-8.4 -y
+sudo dnf install redis -y
+sudo systemctl enable --now redis
+
+# Fix SELinux para PHP-Redis
+sudo setsebool -P httpd_can_network_connect 1
+```
+
+### Supervisor (Gestión de Colas)
+```bash
+sudo dnf install supervisor -y
+sudo systemctl enable --now supervisord
+```
+
+### Ghostscript
+Indispensable para el manejo de PDFs en CSDOCS:
+```bash
+sudo dnf install ghostscript -y
+```
+
+---
+
+## 🔑 Permisos y SELinux (Laravel)
+
+Este paso es vital para el funcionamiento de Storage y Cache en entornos RHEL.
+
+<Steps>
+
+1.  **Instalar dependencias de política**
+    ```bash
+    sudo dnf install -y policycoreutils policycoreutils-python-utils
+    ```
+
+2.  **Permisos de Carpeta**
+    ```bash
+    sudo chown -R nginx:nginx /var/www/html/app
+    sudo chmod -R 775 /var/www/html/app/storage
+    sudo chmod -R 775 /var/www/html/app/bootstrap/cache
+    ```
+
+3.  **Contextos SELinux (Persistentes)**
+    ```bash
+    sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/app/storage(/.*)?"
+    sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/app/bootstrap/cache(/.*)?"
+    sudo restorecon -Rv /var/www/html/app
+    ```
+
+</Steps>
+
+---
+
+## 🚀 Despliegue de Aplicación (Nginx Proxy)
+
+A continuación se presentan los ejemplos funcionales para separar el acceso de Front y Back, incluyendo la redirección de API y gestión de sockets.
+
+<Tabs>
+  <TabItem label="Backend (controlgestion_back.conf)">
+    ```nginx
+    server {
+        # Acceso únicamente local
+        listen 127.0.0.1:8000;
+        server_name _;
+
+        if ($block_bad_agents) { return 403; }
+
+        root /var/www/html/CG/controlgestionback/public;
+        index index.php;
+        charset utf-8;
+
+        access_log /var/log/nginx/CGback_access.log;
+        error_log  /var/log/nginx/CGback_error.log error;
+
+        include /etc/nginx/snippets/security.conf;
+
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        location ~ ^/index\.php(/|$) {
+            fastcgi_pass unix:/var/opt/remi/php81/run/php-fpm/www.sock;
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            include fastcgi_params;
+            fastcgi_buffer_size 128k;
+            fastcgi_buffers 8 256k;
+            fastcgi_read_timeout 600;
+        }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Frontend (controlgestion_front.conf)">
+    ```nginx
+    server {
+        listen 81;
+        server_name _;
+
+        if ($block_bad_agents) { return 403; }
+
+        include /etc/nginx/snippets/security.conf;
+
+        # Proxy hacia el Backend
+        location /api/ {
+            proxy_pass http://127.0.0.1:8000/api/;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # Frontend estático (Angular/React)
+        location / {
+            root /var/www/html/CG/ControlGestionFront/dist/ControlGestionFront;
+            index index.html;
+            access_log /var/log/nginx/CGfront_access.log;
+            error_log  /var/log/nginx/CGfront_error.log error;
+            try_files $uri $uri/ /index.html?$query_string;
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 🛠️ Recursos Rocky Linux 10
+
+Puedes descargar el paquete completo de configuración que incluye el instructivo, archivos de Nginx (`nginx.conf` y `conf.d`) y snippets de seguridad.
+
+<LinkButton href="/recursos/rocky-10-config.zip" icon="rocket" variant="primary">
+  Descargar Pack Rocky Linux 10 (.zip)
+</LinkButton>
+
+<Aside type="tip">
+  Verifica siempre la conexión PHP-FPM mediante `php -i | grep mysqlnd`. Si no está presente, instala `php-mysqlnd`.
+</Aside>
