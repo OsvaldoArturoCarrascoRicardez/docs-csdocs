@@ -1,0 +1,23 @@
+{
+    "main": [
+        {
+            "name": "Inicio",
+            "url": "/"
+        },
+        {
+            "name": "Manuales de Usuario",
+            "url": "/usuario/core/"
+        },
+        {
+            "name": "Documentación Técnica",
+            "url": "/tecnico/core/backend/"
+        },
+        {
+            "name": "CSDocs",
+            "url": "https://www.cs-docs.com/"
+        }
+    ],
+    "footer": {
+        "copyright": "CSDOCS"
+    }
+}

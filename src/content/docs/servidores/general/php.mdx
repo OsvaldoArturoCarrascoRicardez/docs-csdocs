@@ -1,0 +1,58 @@
+---
+title: PHP (8.1 & 8.2)
+description: Configuración detallada de PHP para los backends de CSDOCS.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 🐘 PHP - Instalación y Configuración
+
+CSDOCS requiere **PHP 8.1** para módulos como Control de Gestión y **PHP 8.2** para el Core y otros servicios recientes.
+
+---
+
+## 📦 Instalación
+
+En Ubuntu 24.04, utiliza el repositorio de Ondrej Surý para gestionar múltiples versiones:
+
+```bash
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+
+# Instalación de ambas versiones
+sudo apt install php8.1-fpm php8.1-common php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-intl -y
+sudo apt install php8.2-fpm php8.2-common php8.2-mysql php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick php8.2-cli php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-soap php8.2-zip php8.2-intl -y
+```
+
+---
+
+## ⚙️ Configuración Optimizada (php.ini)
+
+Para un rendimiento óptimo en producción, ajusta los siguientes valores en `/etc/php/8.x/fpm/php.ini`:
+
+```ini
+upload_max_filesize = 100M
+post_max_size = 100M
+memory_limit = 512M
+max_execution_time = 600
+date.timezone = America/Mexico_City
+```
+
+---
+
+## 🧵 Gestión de PHP-FPM
+
+Asegúrate de que los servicios estén activos y configurados para iniciar con el sistema:
+
+```bash
+sudo systemctl enable php8.1-fpm
+sudo systemctl start php8.1-fpm
+
+sudo systemctl enable php8.2-fpm
+sudo systemctl start php8.2-fpm
+```
+
+<Card title="Cambio de Versión CLI" icon="rocket">
+  Para cambiar la versión por defecto en la terminal:
+  `sudo update-alternatives --set php /usr/bin/php8.2`
+</Card>

@@ -1,0 +1,64 @@
+---
+import config from "@/config/config.json" assert { type: "json" };
+import { Image } from "astro:assets";
+import logoImage from "@/assets/csdocs-logo.png";
+
+const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
+
+const theme_switcher = config.settings.theme_switcher;
+const {
+  logo,
+  logo_darkmode,
+  logo_width,
+  logo_height,
+  logo_text,
+  title,
+}: {
+  logo: string;
+  logo_darkmode: string;
+  logo_width: any;
+  logo_height: any;
+  logo_text: string;
+  title: string;
+} = config.site;
+---
+
+<a href={siteTitleHref} class="navbar-brand inline-block">
+  {
+    logoImage ? (
+      <>
+        <Image
+          src={logoImage}
+          class={`inline-block ${theme_switcher && "dark:hidden"}`}
+          width={logo_width.replace("px", "") * 2}
+          height={logo_height.replace("px", "") * 2}
+          alt={title}
+          style={{
+            height: logo_height.replace("px", "") + "px",
+            width: logo_width.replace("px", "") + "px",
+          }}
+          format="webp"
+        />
+
+        {theme_switcher && (
+          <Image
+            src={logoImage}
+            class={`hidden dark:inline-block`}
+            width={logo_width.replace("px", "") * 2}
+            height={logo_height.replace("px", "") * 2}
+            alt={title}
+            style={{
+              height: logo_height.replace("px", "") + "px",
+              width: logo_width.replace("px", "") + "px",
+            }}
+            format="webp"
+          />
+        )}
+      </>
+    ) : logo_text ? (
+      logo_text
+    ) : (
+      siteTitle || title
+    )
+  }
+</a>

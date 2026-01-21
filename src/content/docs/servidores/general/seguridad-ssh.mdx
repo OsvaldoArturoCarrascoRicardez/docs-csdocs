@@ -1,0 +1,83 @@
+---
+title: Seguridad y SSH
+description: Mejores prácticas de endurecimiento de servidores CSDOCS.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 🛡️ Seguridad y Acceso SSH
+
+Proteger el servidor es el primer paso antes de desplegar cualquier código de CSDOCS en producción.
+
+---
+
+## 🔑 Acceso via Llave Pública (Recomendado)
+
+Desactiva el acceso por contraseña para prevenir ataques de fuerza bruta.
+
+<Steps>
+
+1.  **Generar llaves en tu PC local**
+    ```bash
+    ssh-keygen -t ed25519 -C "admin@tu-empresa.com"
+    ```
+
+2.  **Copiar la llave al servidor**
+    ```bash
+    ssh-copy-id usuario@ip-del-servidor
+    ```
+
+</Steps>
+
+---
+
+## 🧱 Configuración de Firewall (UFW)
+
+En Ubuntu, utiliza UFW para cerrar todos los puertos no necesarios.
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# Abrir solo lo esencial
+sudo ufw allow ssh          # Puerto 22 (O tu puerto personalizado)
+sudo ufw allow http         # Puerto 80
+sudo ufw allow https        # Puerto 443
+
+sudo ufw enable
+```
+
+---
+
+## 🚫 Endurecimiento de SSH
+
+Edita `/etc/ssh/sshd_config` para aplicar estas mejoras:
+
+```conf
+PermitRootLogin no           # Prohibir login a root
+PasswordAuthentication no    # Forzar llaves SSH
+Port 2222                    # Opcional: Cambiar puerto por defecto
+```
+
+Reinicia el servicio para aplicar:
+```bash
+sudo systemctl restart ssh
+```
+
+---
+
+## 🛡️ Fail2Ban (Protección contra Intrusos)
+
+Fail2Ban bloquea IPs que muestran comportamientos maliciosos persistentes.
+
+```bash
+sudo apt install fail2ban -y
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+```
+
+<Card title="Checklist Final" icon="approve-check-circle">
+  - ¿Root deshabilitado? ✅
+  - ¿Firewall activo? ✅
+  - ¿Acceso solo por llaves? ✅
+</Card>

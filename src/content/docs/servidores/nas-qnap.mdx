@@ -1,0 +1,40 @@
+---
+title: NAS QNAP
+description: Guía básica para la configuración de almacenamiento CSDOCS en NAS QNAP.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 📂 Configuración en NAS QNAP
+
+Guía para la implementación de repositorios CSDOCS utilizando sistemas NAS QNAP.
+
+---
+
+## ⚙️ Preparación del Almacenamiento
+
+<Steps>
+
+1.  **Shared Folders**
+    En *Control Panel > Privileges > Shared Folders*, crea el volumen necesario para los documentos.
+
+2.  **Habilitar NFS v4**
+    En *Network & File Services > Win/Mac/NFS*, habilita el servicio NFS para el montaje remoto desde servidores Linux.
+
+</Steps>
+
+---
+
+## 📦 Container Station (Docker)
+
+QNAP permite ejecutar contenedores fácilmente:
+
+1.  Abre **Container Station**.
+2.  Crea una nueva aplicación utilizando la imagen oficial de CSDOCS o mediante `docker-compose`.
+3.  Realiza el mapeo de puertos (8000-8003) hacia la IP del NAS.
+
+---
+
+<Card title="Seguridad" icon="shield-check">
+  Utiliza **QuFirewall** para restringir el acceso al NAS únicamente desde la red interna de la oficina o de los servidores de aplicación.
+</Card>

@@ -1,0 +1,45 @@
+---
+title: NAS Synology
+description: Guía básica para la configuración de almacenamiento CSDOCS en NAS Synology.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 📁 Configuración en NAS Synology
+
+Guía para utilizar un NAS Synology como servidor de archivos o repositorio para la suite **CSDOCS**.
+
+---
+
+## 🛠️ Configuración de Almacenamiento
+
+<Steps>
+
+1.  **Crear Carpeta Compartida**
+    Ve a *Panel de Control > Carpeta Compartida* y crea una carpeta llamada `csdocs_data`.
+
+2.  **Configurar Permisos NFS/SMB**
+    Asegúrate de que el servidor que ejecuta los backends tenga acceso de lectura/escritura mediante el protocolo elegido.
+
+3.  **Montaje en Linux (Opcional)**
+    ```bash
+    sudo mount -t nfs [IP_SYNOLOGY]:/volume1/csdocs_data /var/www/csdocs/storage/app/repository
+    ```
+
+</Steps>
+
+---
+
+## 🐳 Docker en Synology (Container Manager)
+
+Si deseas ejecutar CSDOCS directamente en el NAS:
+
+1.  Instala **Container Manager** desde el Centro de Paquetes.
+2.  Importa el archivo `docker-compose.yml` de la suite.
+3.  Configura las variables de entorno en el panel.
+
+---
+
+<Card title="Rendimiento" icon="rocket">
+  Se recomienda el uso de unidades SSD si el NAS funcionará como base de datos o almacenamiento intensivo de metadatos.
+</Card>

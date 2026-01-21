@@ -1,0 +1,137 @@
+{
+  "main": [
+    {
+      "label": "Manuales de Usuario",
+      "items": [
+        {
+          "label": "Manual Core",
+          "link": "/usuario/core/"
+        },
+        {
+          "label": "Manual Control de Gestión",
+          "link": "/usuario/control-gestion/"
+        },
+        {
+          "label": "Manual Archivística",
+          "link": "/usuario/archivistica/"
+        },
+        {
+          "label": "Manual Content",
+          "link": "/usuario/content/"
+        }
+      ]
+    },
+    {
+      "label": "Documentación Técnica",
+      "items": [
+        {
+          "label": "Core CSDOCS",
+          "autogenerate": {
+            "directory": "tecnico/core"
+          }
+        },
+        {
+          "label": "Control de Gestión",
+          "autogenerate": {
+            "directory": "tecnico/control-gestion"
+          }
+        },
+        {
+          "label": "Archivística",
+          "autogenerate": {
+            "directory": "tecnico/archivistica"
+          }
+        },
+        {
+          "label": "Content",
+          "autogenerate": {
+            "directory": "tecnico/content"
+          }
+        },
+        {
+          "label": "Guías Generales",
+          "autogenerate": {
+            "directory": "tecnico/guias"
+          }
+        },
+        {
+          "label": "Referencia Técnica",
+          "autogenerate": {
+            "directory": "tecnico/referencia"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Configuración de Servidores",
+      "items": [
+        {
+          "label": "Ubuntu Server 24.04",
+          "link": "/servidores/ubuntu-server-24/"
+        },
+        {
+          "label": "Rocky Linux 9",
+          "link": "/servidores/rocky-linux/"
+        },
+        {
+          "label": "WSL2 Windows",
+          "link": "/servidores/wsl2-windows/"
+        },
+        {
+          "label": "NAS Synology",
+          "link": "/servidores/nas-synology/"
+        },
+        {
+          "label": "NAS QNAP",
+          "link": "/servidores/nas-qnap/"
+        },
+        {
+          "label": "Componentes Generales",
+          "items": [
+            {
+              "label": "PHP (8.1 & 8.2)",
+              "link": "/servidores/general/php/"
+            },
+            {
+              "label": "Nginx y Reverse Proxy",
+              "link": "/servidores/general/nginx/"
+            },
+            {
+              "label": "Supervisor (Colas)",
+              "link": "/servidores/general/supervisor/"
+            },
+            {
+              "label": "Bases de Datos",
+              "link": "/servidores/general/bases-de-datos/"
+            },
+            {
+              "label": "Redis",
+              "link": "/servidores/general/redis/"
+            },
+            {
+              "label": "Tareas Cron",
+              "link": "/servidores/general/tareas-cron/"
+            },
+            {
+              "label": "Node.js y NVM",
+              "link": "/servidores/general/node-nvm/"
+            },
+            {
+              "label": "Seguridad y SSH",
+              "link": "/servidores/general/seguridad-ssh/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Recursos",
+      "items": [
+        {
+          "label": "Centro de Descargas",
+          "link": "/recursos/"
+        }
+      ]
+    }
+  ]
+}

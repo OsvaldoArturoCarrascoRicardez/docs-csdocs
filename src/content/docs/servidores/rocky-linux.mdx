@@ -1,0 +1,101 @@
+---
+title: Rocky Linux 9
+description: Guía de configuración de ambiente CSDOCS en sistemas basados en RHEL.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 🏔️ Configuración en Rocky Linux 9
+
+Guía para la implementación de la suite **CSDOCS** en entornos empresariales basados en RHEL.
+
+---
+
+## 🛡️ Seguridad y Sistema
+
+<Steps>
+
+1.  **Actualización General**
+    ```bash
+    sudo dnf update -y
+    ```
+
+2.  **Firewalld**
+    ```bash
+    sudo systemctl enable --now firewalld
+    sudo firewall-cmd --permanent --add-service=http
+    sudo firewall-cmd --permanent --add-service=https
+    sudo firewall-cmd --reload
+    ```
+
+3.  **SELinux** (Se recomienda configurar en `permissive` durante el setup inicial)
+    ```bash
+    sudo setenforce 0
+    # Editar /etc/selinux/config para persistencia
+    ```
+
+</Steps>
+
+---
+
+## 📦 Stack Tecnológico
+
+### 1. PHP via Remi Repository
+Rocky Linux requiere el repositorio Remi para versiones recientes de PHP.
+
+```bash
+sudo dnf install https://rpms.remirepo.net/enterprise/remi-release-9.rpm -y
+sudo dnf module reset php
+sudo dnf module enable php:remi-8.2 -y
+sudo dnf install php php-fpm php-mysqlnd php-xml php-curl php-mbstring php-zip php-gd php-intl php-bcmath -y
+```
+
+### 2. Infraestructura de Datos
+
+<Tabs>
+  <TabItem label="MySQL (AppStream)">
+    ```bash
+    sudo dnf install mysql-server -y
+    sudo systemctl enable --now mysqld
+    ```
+  </TabItem>
+  <TabItem label="Redis">
+    ```bash
+    sudo dnf install redis -y
+    sudo systemctl enable --now redis
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## ⚙️ Servicios del Sistema
+
+### Supervisor
+```bash
+sudo dnf install epel-release -y
+sudo dnf install supervisor -y
+sudo systemctl enable --now supervisord
+```
+
+### Nginx
+```bash
+sudo dnf install nginx -y
+sudo systemctl enable --now nginx
+```
+
+---
+
+## 🐳 Docker y Podman
+
+En Rocky Linux, Podman es el motor por defecto, pero puedes instalar Docker CE:
+
+```bash
+sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo dnf install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+sudo systemctl enable --now docker
+```
+
+<Card title="Nota RHEL" icon="information">
+  Asegúrate de configurar correctamente los contextos de SELinux si decides mantenerlo en modo `enforcing` para producción.
+</Card>

@@ -1,0 +1,84 @@
+---
+title: Nginx y Reverse Proxy
+description: Configuración del servidor web y proxy inverso para CSDOCS.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 🌐 Nginx - Servidor Web y Proxy
+
+Nginx actúa como la puerta de entrada para todas las aplicaciones de CSDOCS, gestionando el tráfico hacia los frontends (Angular) y los backends (Laravel).
+
+---
+
+## 🛠️ Instalación
+
+```bash
+sudo apt update
+sudo apt install nginx -y
+sudo systemctl enable nginx
+```
+
+---
+
+## 📄 Plantilla de Configuración (Backend Laravel)
+
+Crea un archivo en `/etc/nginx/sites-available/csdocs-api`:
+
+```nginx
+server {
+    listen 80;
+    server_name api.tu-dominio.com;
+    root /var/www/csdocs-core/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+```
+
+---
+
+## 🎨 Configuración para Frontend (Angular)
+
+```nginx
+server {
+    listen 80;
+    server_name app.tu-dominio.com;
+    root /var/www/csdocs-frontend/dist/browser;
+
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+<Card title="SSL con Certbot" icon="shield-check">
+  Instala TLS gratis fácilmente:
+  `sudo apt install certbot python3-certbot-nginx -y`
+  `sudo certbot --nginx -d tu-dominio.com`
+</Card>

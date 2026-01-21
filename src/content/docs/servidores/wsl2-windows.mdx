@@ -1,0 +1,72 @@
+---
+title: WSL2 (Windows)
+description: Configuración de ambiente de desarrollo local en Windows mediante WSL2.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 🪟 Desarrollo en Windows con WSL2
+
+Esta guía te ayudará a configurar un entorno de desarrollo profesional basado en Linux dentro de Windows.
+
+---
+
+## 🛠️ Instalación de WSL2
+
+<Steps>
+
+1.  **Instalar WSL**
+    Desde una terminal de PowerShell como Administrador:
+    ```powershell
+    wsl --install
+    ```
+    *Reinicia tu computadora si es necesario.*
+
+2.  **Elegir Distribución**
+    Se recomienda **Ubuntu 24.04** desde la Microsoft Store.
+
+3.  **Configuración Inicial**
+    Crea tu usuario y contraseña cuando se te solicite al abrir el terminal de Ubuntu.
+
+</Steps>
+
+---
+
+## 🚀 Entorno de Desarrollo (Dentro de WSL)
+
+### 1. Node.js via NVM
+NVM es la mejor forma de gestionar las versiones 20 y 22 que requiere CSDOCS.
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+# Reinicia tu terminal o ejecuta:
+source ~/.bashrc
+
+nvm install 20
+nvm install 22
+nvm use 22
+```
+
+### 2. PHP y Composer
+```bash
+sudo apt update
+sudo apt install php-cli php-curl php-xml php-mbstring php-zip composer -y
+```
+
+### 3. Docker Desktop
+Instala [Docker Desktop para Windows](https://www.docker.com/products/docker-desktop/) y activa la integración con WSL2 en la configuración (`Settings > Resources > WSL Integration`).
+
+---
+
+## 🗄️ Bases de Datos Locales
+
+Para desarrollo local, lo más sencillo es ejecutar las bases de datos mediante Docker:
+
+```bash
+# Ejemplo: Levantar MySQL rápido
+docker run --name csdocs-mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 -d mysql:8.0
+```
+
+<Card title="Tip Pro" icon="star">
+  Utiliza la extensión **WSL** en **VS Code** para abrir tus proyectos directamente desde el entorno Linux para un mejor rendimiento.
+</Card>

@@ -1,0 +1,68 @@
+---
+title: Redis (Caché y Sesiones)
+description: Configuración de Redis para optimización de CSDOCS.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# ⚡ Redis - Caché y Mensajería
+
+Redis es fundamental en CSDOCS para el manejo de sesiones de usuario persistentes, caché de aplicaciones y como broker de mensajería para colas.
+
+---
+
+## 📦 Instalación
+
+```bash
+sudo apt update
+sudo apt install redis-server -y
+```
+
+---
+
+## ⚙️ Configuración Básica
+
+Edita `/etc/redis/redis.conf`:
+
+```conf
+# Asegurar que solo escuche localmente o en IPs autorizadas
+bind 127.0.0.1 ::1
+
+# Limitar memoria máxima (ejemplo 256MB)
+maxmemory 256mb
+maxmemory-policy allkeys-lru
+```
+
+Reinicia el servicio para aplicar:
+```bash
+sudo systemctl restart redis-server
+```
+
+---
+
+## 🧪 Pruebas de Funcionamiento
+
+Usa el CLI integrado para verificar la conexión:
+
+```bash
+redis-cli ping
+# Respuesta esperada: PONG
+```
+
+---
+
+## 🛠️ Uso en Laravel (.env)
+
+Configura tu archivo `.env` para aprovechar Redis:
+
+```env
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+<Card title="Tip" icon="bulb">
+  Para ver qué está pasando en Redis en tiempo real, ejecuta: `redis-cli monitor`.
+</Card>

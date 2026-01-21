@@ -1,0 +1,145 @@
+---
+title: Guía de Instalación
+description: Instrucciones detalladas para la puesta en marcha de la Suite CSDocs.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 🚀 Suite CSDocs – Instalación Completa
+
+Esta guía integral describe la instalación de la **Suite CSDocs**, incluyendo tanto los **backends** como los **frontends** de los sistemas interdependientes.
+
+---
+
+## 🏗️ Arquitectura del Sistema
+
+La suite se compone de 4 pilares fundamentales operando en sincronía:
+
+```text
+┌─────────────────┐ ┌─────────────────┐
+│ FRONTENDS       │ │ BACKENDS        │
+│  (Angular 18+)  │ │  (Laravel 10/11)│
+├─────────────────┤ ├─────────────────┤
+│ Core Front      │ │ Core Back       │ ◄── SISTEMA CENTRAL
+│ (Angular 20)    │ │ (Laravel 11)    │
+├─────────────────┤ ├─────────────────┤
+│ CG Front        │ │ CG Back         │
+│ (Angular 18)    │ │ (Laravel 10)    │
+├─────────────────┤ ├─────────────────┤
+│ Archivistica    │ │    Archivistica │
+│ Front           │ │ Back            │
+├─────────────────┤ ├─────────────────┤
+│ Content Light   │ │  Cont Light     │
+│ Front           │ │ Back            │
+└─────────────────┘ └─────────────────┘
+```
+
+---
+
+## ⚙️ Requisitos Previos
+
+### Soporte de Sistemas Operativos
+
+La suite es compatible con diversos entornos, siendo **Linux** el recomendado para producción.
+
+- **Rocky Linux / AlmaLinux / RHEL**: Recomendado para entornos empresariales.
+- **Ubuntu / Debian**: Totalmente soportado.
+- **macOS / Windows (WSL2)**: Ideal para desarrollo.
+
+### Herramientas Requeridas
+
+```bash
+# Software Base
+php --version       # 8.1+
+mysql --version     # 8.0+
+mongod --version    # 4.4+ (Para algunos módulos)
+redis-cli --version # 6+
+composer --version
+```
+
+---
+
+## 🖥️ Instalación de Backends
+
+Sigue el orden recomendado para asegurar la correcta vinculación de llaves OAuth.
+
+<Steps>
+
+1.  **Core Backend (Sistema Central)**
+    Es el motor de autenticación.
+
+    ```bash
+    git clone git@bitbucket.org:csdocs/csdocs-core.git && cd csdocs-core
+    cp .env.example .env
+    composer install
+    php artisan migrate --seed
+    php artisan passport:keys
+    php artisan user:create-root
+    ```
+
+2.  **Sistemas Satélite**
+    Requieren copiar las llaves del Core para validar tokens.
+
+    <Tabs>
+      <TabItem label="Control de Gestión">
+        ```bash
+        git clone git@bitbucket.org:csdocs/controlgestionback.git && cd controlgestionback
+        cp ../csdocs-core/storage/oauth-*.key storage/
+        composer install
+        php artisan migrate --seed
+        ```
+      </TabItem>
+      <TabItem label="Archivística">
+        ```bash
+        git clone git@bitbucket.org:csdocs/archivisticaback.git && cd archivisticaback
+        cp ../csdocs-core/storage/oauth-*.key storage/
+        composer install
+        php artisan migrate --seed
+        ```
+      </TabItem>
+      <TabItem label="Content">
+        ```bash
+        git clone git@bitbucket.org:csdocs/content-light-back.git && cd content-light-back
+        cp ../csdocs-core/storage/oauth-*.key storage/
+        composer install
+        ```
+      </TabItem>
+    </Tabs>
+
+</Steps>
+
+---
+
+## 🎨 Instalación de Frontends
+
+<Steps>
+
+1.  **Core Frontend (Node 22)**
+    ```bash
+    nvm use 22
+    npm install --legacy-peer-deps
+    ng serve --port=4200
+    ```
+
+2.  **Aplicaciones Cliente (Node 20)**
+    Requieren compilación previa del editor personalizado.
+
+    <Tabs>
+      <TabItem label="CG / Archivística">
+        ```bash
+        nvm use 20
+        npm install --legacy-peer-deps
+        # Compilar Editor
+        cd projects/editor/src/ckeditor5-build-decoupled-document && npm i && npm run build
+        cd ../../../../ && ng serve --port=4201
+        ```
+      </TabItem>
+    </Tabs>
+
+</Steps>
+
+---
+
+<Card title="Verificación" icon="approve-check-circle">
+  Una vez instalado, verifica que los servicios respondan correctamente en los puertos configurados (8000-8003).
+</Card>

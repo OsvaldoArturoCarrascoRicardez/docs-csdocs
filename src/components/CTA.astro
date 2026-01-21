@@ -1,0 +1,19 @@
+---
+import Section from "./Section.astro";
+---
+
+{/* CTA Disabled */}
+
+<style></style>
+
+<script>
+  const ctaContainerButton = document.querySelector(".cta-container a");
+
+  const buttonParent = ctaContainerButton?.parentElement;
+
+  if (buttonParent) {
+    buttonParent.style.display = "flex";
+    buttonParent.style.justifyContent = "center";
+    buttonParent.style.gap = "1rem";
+  }
+</script>

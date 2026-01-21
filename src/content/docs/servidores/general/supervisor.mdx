@@ -1,0 +1,72 @@
+---
+title: Supervisor (Colas de Laravel)
+description: Gestión de procesos en segundo plano para CSDOCS.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 🏗️ Supervisor - Control de Procesos
+
+Laravel utiliza colas para tareas pesadas (envío de correos, generación de PDFs, etc.). Supervisor asegura que estos trabajadores de colas nunca se detengan.
+
+---
+
+## 📦 Instalación
+
+```bash
+sudo apt update
+sudo apt install supervisor -y
+```
+
+---
+
+## ⚙️ Configuración de un Worker
+
+Crea el archivo `/etc/supervisor/conf.d/csdocs-worker.conf`:
+
+```ini
+[program:csdocs-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/csdocs/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/var/www/csdocs/storage/logs/worker.log
+stopwaitsecs=3600
+```
+
+---
+
+## 🕹️ Comandos Útiles
+
+<Steps>
+
+1.  **Releer configuraciones nuevas**
+    ```bash
+    sudo supervisorctl reread
+    ```
+
+2.  **Activar cambios**
+    ```bash
+    sudo supervisorctl update
+    ```
+
+3.  **Ver estado**
+    ```bash
+    sudo supervisorctl status
+    ```
+
+4.  **Reiniciar todo**
+    ```bash
+    sudo supervisorctl restart all
+    ```
+
+</Steps>
+
+<Card title="Importante" icon="warning">
+  Cada vez que realices un despliegue de código (git pull), recuerda reiniciar supervisor para que los trabajadores usen la nueva versión del código.
+</Card>

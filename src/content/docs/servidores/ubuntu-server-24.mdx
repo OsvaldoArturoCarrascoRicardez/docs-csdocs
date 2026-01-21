@@ -1,0 +1,137 @@
+---
+title: Ubuntu Server 24.04
+description: Guía completa de instalación y configuración de ambiente CSDOCS en Ubuntu.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 🐧 Configuración en Ubuntu Server 24.04 LTS
+
+Esta guía detalla la preparación de un servidor desde cero para ejecutar la suite **CSDOCS**.
+
+---
+
+## 🛡️ Seguridad Inicial
+
+<Steps>
+
+1.  **Actualizar el sistema**
+    ```bash
+    sudo apt update && sudo apt upgrade -y
+    ```
+
+2.  **Configurar Firewall (UFW)**
+    ```bash
+    sudo ufw allow OpenSSH
+    sudo ufw allow 'Nginx Full'
+    sudo ufw enable
+    ```
+
+</Steps>
+
+---
+
+## 📦 Instalación de Dependencias Core
+
+### 1. PHP (8.1 y 8.2)
+CSDOCS utiliza múltiples versiones de PHP para sus diferentes módulos.
+
+```bash
+sudo apt install software-properties-common -y
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+
+# Instalar PHP 8.1 y 8.2 con extensiones comunes
+sudo apt install php8.1 php8.1-fpm php8.1-mysql php8.1-xml php8.1-curl php8.1-mbstring php8.1-zip php8.1-gd php8.1-intl php8.1-bcmath -y
+sudo apt install php8.2 php8.2-fpm php8.2-mysql php8.2-xml php8.2-curl php8.2-mbstring php8.2-zip php8.2-gd php8.2-intl php8.2-bcmath -y
+```
+
+### 2. Bases de Datos y Caché
+
+<Tabs>
+  <TabItem label="MySQL">
+    ```bash
+    sudo apt install mysql-server -y
+    sudo mysql_secure_installation
+    ```
+  </TabItem>
+  <TabItem label="Redis">
+    ```bash
+    sudo apt install redis-server -y
+    sudo systemctl enable redis-server
+    ```
+  </TabItem>
+  <TabItem label="MongoDB">
+    ```bash
+    sudo apt install gnupg curl
+    curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
+    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+    sudo apt update
+    sudo apt install -y mongodb-org
+    sudo systemctl start mongod
+    sudo systemctl enable mongod
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 🚀 Gestión de Procesos y Tareas
+
+### Supervisor
+Ideal para mantener los `queue:work` de Laravel siempre activos.
+
+```bash
+sudo apt install supervisor -y
+# Configuración base en /etc/supervisor/conf.d/
+```
+
+### Cron
+Necesario para el `schedule:run` de los backends.
+
+```bash
+# Editar crontab del usuario web
+crontab -e
+# Agregar: * * * * * cd /ruta/al/proyecto && php artisan schedule:run >> /dev/null 2>&1
+```
+
+---
+
+## 🌐 Nginx y Reverse Proxy
+
+Servidor web principal para servir frontends y redirigir peticiones a los backends.
+
+```bash
+sudo apt install nginx -y
+
+# Ejemplo de host virtual (Simplificado)
+server {
+    listen 80;
+    server_name core.cs-docs.com;
+    root /var/www/csdocs-core/public;
+
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+    }
+}
+```
+
+---
+
+## 🐳 Docker (Opcional para Desarrollo)
+
+```bash
+sudo apt install docker.io docker-compose -y
+sudo usermod -aG docker $USER
+```
+
+<Card title="Sugerencia de Seguridad" icon="warning">
+  Recuerda configurar certificados SSL con **Certbot** para todos tus dominios públicos.
+</Card>

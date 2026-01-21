@@ -1,0 +1,78 @@
+---
+title: Solución de Problemas
+description: Guía para resolver errores comunes en la Suite CSDocs.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Si encuentras un error durante la instalación o ejecución, consulta los siguientes puntos antes de contactar a soporte.
+
+## Errores de Instalación del Backend (Laravel)
+
+<Tabs>
+  <TabItem label="Permisos">
+
+    ### Error de Permisos en Storage/Cache
+    Si ves errores relacionados con permisos de escritura:
+    ```bash
+    chmod -R 777 storage bootstrap/cache
+    ```
+    Asegúrate también de haber creado las carpetas necesarias si clonaste el repo limpio.
+
+  </TabItem>
+  <TabItem label="OAuth Keys">
+
+    ### Error: Personal access client not found
+    Esto ocurre si no has generado las llaves de Passport o si los clientes satélites no tienen las llaves del Core.
+    
+    **En Core:**
+    ```bash
+    php artisan passport:keys
+    php artisan passport:client --personal
+    ```
+    
+    **En Otros Backends:**
+    Asegúrate de copiar `oauth-private.key` y `oauth-public.key` desde `csdocs-core/storage` a la carpeta `storage` del backend destino.
+
+  </TabItem>
+</Tabs>
+
+## Errores de Instalación del Frontend (Angular)
+
+<Tabs>
+  <TabItem label="Node Version">
+
+    ### Error: Python not found / gyp ERR!
+    Generalmente causado por usar una versión de Node incorrecta.
+    - **Core Front**: Usa `nvm use 22`
+    - **Otros**: Usa `nvm use 20`
+
+  </TabItem>
+  <TabItem label="Dependencias">
+
+    ### Error: ERESOLVE unable to resolve dependency tree
+    Debido a conflictos de versiones en Angular, siempre instala usando:
+    ```bash
+    npm install --legacy-peer-deps
+    ```
+
+  </TabItem>
+  <TabItem label="CKEditor">
+
+    ### Error: CKEditorError: ckeditor-duplicated-modules
+    O fallos al cargar el editor. Asegúrate de compilar el editor manualmente antes de servir la aplicación:
+    ```bash
+    cd projects/editor/src/ckeditor5-build-decoupled-document
+    npm i
+    npm run build
+    ```
+
+  </TabItem>
+</Tabs>
+
+## Errores Generales
+
+### El backend no responde
+1. Verifica que el contenedor Docker esté corriendo.
+2. Revisa los logs en `storage/logs/laravel.log`.
+3. Asegúrate de que el archivo `.env` tenga las credenciales de base de datos correctas.

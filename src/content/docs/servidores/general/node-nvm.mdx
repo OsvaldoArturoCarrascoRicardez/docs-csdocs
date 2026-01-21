@@ -1,0 +1,71 @@
+---
+title: Node.js y NVM
+description: Gestión de versiones de Node para los frontends de CSDOCS.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# 📦 Node.js con NVM
+
+Los frontends de CSDOCS requieren versiones específicas de Node.js (**v20** para aplicaciones cliente y **v22** para el núcleo). La forma más segura de gestionar esto es mediante **NVM** (Node Version Manager).
+
+---
+
+## 🛠️ Instalación de NVM
+
+Ejecuta el script oficial de instalación:
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+```
+
+**Importante:** Reinicia tu terminal o recarga tu perfil para activar los comandos:
+```bash
+source ~/.bashrc
+```
+
+---
+
+## 🚀 Gestión de Versiones
+
+<Steps>
+
+1.  **Instalar versiones necesarias**
+    ```bash
+    nvm install 20
+    nvm install 22
+    ```
+
+2.  **Cambiar entre versiones**
+    Para trabajar en el Core:
+    ```bash
+    nvm use 22
+    ```
+    Para trabajar en Control de Gestión / Archivística:
+    ```bash
+    nvm use 20
+    ```
+
+</Steps>
+
+---
+
+## 🔧 Resolución de Problemas Comunes
+
+### Errores de Peer Dependencies
+Al instalar paquetes en CSDOCS, es común usar el flag `--legacy-peer-deps` debido a dependencias de Angular y CKEditor:
+
+```bash
+npm install --legacy-peer-deps
+```
+
+### Memoria Insuficiente al Compilar
+Si el proceso de `build` falla en servidores pequeños (menos de 2GB RAM), aumenta el límite de memoria de Node:
+
+```bash
+export NODE_OPTIONS="--max-old-space-size=2048"
+```
+
+<Card title="Tip" icon="star">
+  Crea archivos `.nvmrc` en la raíz de cada proyecto para que nvm reconozca automáticamente la versión con solo ejecutar `nvm use`.
+</Card>

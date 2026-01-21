@@ -1,0 +1,90 @@
+---
+import { AstroFont } from "astro-font";
+import theme from "@/config/theme.json";
+const { entry, siteTitle } = Astro.locals.starlightRoute;
+const title = entry.data.title;
+---
+
+<!-- Metadatos básicos -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta
+  name="description"
+  content="CSDOCS - Soluciones tecnológicas innovadoras y servicios de TI de vanguardia. Transformamos negocios a través de la tecnología con soluciones a medida."
+/>
+<meta
+  name="keywords"
+  content="soluciones TI, tecnología, servicios informáticos, transformación digital, desarrollo de software, consultoría TI, ciberseguridad, cloud computing, CSDOCS"
+/>
+<meta name="author" content="CSDOCS" />
+<meta name="robots" content="index, follow" />
+<meta name="generator" content={Astro.generator} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://csdocs.com/" />
+<meta property="og:title" content={title + " | " + siteTitle} />
+<meta
+  property="og:description"
+  content="CSDOCS - Líderes en soluciones tecnológicas innovadoras. Ofrecemos servicios de TI de vanguardia para impulsar tu negocio al siguiente nivel."
+/>
+<meta property="og:image" content="https://csdocs.com/images/og-image.jpg" />
+<meta property="og:site_name" content="CSDOCS" />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="https://csdocs.com/" />
+<meta property="twitter:title" content={title + " | " + siteTitle} />
+<meta
+  property="twitter:description"
+  content="CSDOCS - Líderes en soluciones tecnológicas innovadoras. Conectamos tu negocio con el futuro digital."
+/>
+<meta
+  property="twitter:image"
+  content="https://csdocs.com/images/twitter-card.jpg"
+/>
+
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+<link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
+<link
+  rel="apple-touch-icon"
+  sizes="180x180"
+  href="/favicon/apple-touch-icon.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="32x32"
+  href="/favicon/favicon-32x32.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="16x16"
+  href="/favicon/favicon-16x16.png"
+/>
+<link rel="manifest" href="/favicon/site.webmanifest" />
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+  rel="stylesheet"
+/>
+<link
+  href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<link
+  href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Poppins:wght@400;600;700&display=swap"
+  rel="stylesheet"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+/>
+<!-- <link rel="stylesheet" href="/styles.css"> This is handled by global.css via Starlight config -->
+
+<title>{title} | {siteTitle}</title>
+
+<!-- Original Font Loading Logic just in case theme config is used elsewhere, though we hardcoded the requested fonts above -->
+<!-- This ensures if the theme.json changes we don't break, but we prioritize the user requested fonts -->

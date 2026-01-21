@@ -1,0 +1,41 @@
+---
+title: CSDOCS
+description: Centro de documentación oficial de CSDOCS.
+template: splash
+hero:
+  tagline: Soluciones tecnológicas innovadoras y servicios de TI de vanguardia.
+  image:
+    file: ../../assets/overview.png
+  actions:
+    - text: Manuales de Usuario
+      link: /usuario/core/
+      icon: right-arrow
+      variant: primary
+    - text: Documentación Técnica
+      link: /tecnico/core/backend/
+      icon: external
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+## Explora nuestra documentación
+
+<CardGrid>
+  <Card title="Manuales de Usuario" icon="document">
+    Guías funcionales para usuarios finales de las aplicaciones.
+    [Ver Manuales](/usuario/core/).
+  </Card>
+  <Card title="Documentación Técnica" icon="setting">
+    Guías de instalación, configuración y referencia de desarrollo.
+    [Ver Documentación](/tecnico/core/backend/).
+  </Card>
+  <Card title="Referencias" icon="open-book">
+    Información detallada de APIs y estructuras. [Ver Referencia](/tecnico/referencia/).
+  </Card>
+  <Card title="Soporte" icon="information">
+    ¿Necesitas ayuda adicional? Contacta con nuestro equipo.
+  </Card>
+  <Card title="Legal" icon="warning">
+    Consulta nuestra [Política de Privacidad](/privacy-policy/).
+  </Card>
+</CardGrid>

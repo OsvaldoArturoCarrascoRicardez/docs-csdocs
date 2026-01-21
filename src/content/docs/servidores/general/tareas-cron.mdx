@@ -1,0 +1,59 @@
+---
+title: Tareas Cron (Automatización)
+description: Configuración del planificador de tareas de Laravel.
+---
+
+import { Steps, Tabs, TabItem, Card } from '@astrojs/starlight/components';
+
+# ⏰ Cron - Planificación de Tareas
+
+Laravel incluye un potente planificador de tareas que permite ejecutar comandos de artisan en intervalos específicos. Para que funcione, el sistema operativo debe llamar al comando `schedule:run` cada minuto.
+
+---
+
+## ⚙️ Configuración del Crontab
+
+Debes agregar una entrada al crontab del usuario que ejecuta el servidor web (usualmente `www-data` o tu usuario de despliegue).
+
+<Steps>
+
+1.  **Abrir el editor de crontab**
+    ```bash
+    crontab -e
+    ```
+
+2.  **Agregar la línea del planificador**
+    Pega lo siguiente al final del archivo, reemplazando `/ruta/al/proyecto` por la ruta absoluta de tu backend:
+
+    ```bash
+    * * * * * cd /var/www/csdocs-core && php artisan schedule:run >> /dev/null 2>&1
+    ```
+
+</Steps>
+
+---
+
+## 📋 Tareas Automatizadas en CSDOCS
+
+El sistema utiliza este comando para:
+
+- Limpiar tokens expirados.
+- Procesar envíos programados.
+- Generar reportes automáticos.
+- Sincronizar metadatos de documentos.
+
+---
+
+## 🛠️ Comandos de Depuración
+
+Si quieres probar el planificador manualmente sin esperar al minuto:
+
+```bash
+php artisan schedule:list
+# O para ejecutarlo forzadamente:
+php artisan schedule:work
+```
+
+<Card title="Nota de Producción" icon="approve-check-circle">
+  Asegúrate de que el usuario del crontab tenga permisos de escritura en la carpeta `storage/logs` del proyecto.
+</Card>

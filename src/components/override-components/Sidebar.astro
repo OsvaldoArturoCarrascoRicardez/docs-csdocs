@@ -1,0 +1,35 @@
+---
+import MobileMenuFooter from "@astrojs/starlight/components/MobileMenuFooter.astro";
+import SidebarPersister from "@astrojs/starlight/components/SidebarPersister.astro";
+import SidebarSublist from "./SidebarSublist.astro";
+
+let sidebar = Astro.locals.starlightRoute.sidebar;
+
+const isUsuario = Astro.url.pathname.includes("/usuario/");
+const isTecnico = Astro.url.pathname.includes("/tecnico/");
+const isServidores = Astro.url.pathname.includes("/servidores/");
+
+if (isUsuario) {
+  sidebar = sidebar.filter(
+    (entry: any) => entry.label === "Manuales de Usuario",
+  );
+} else if (isTecnico) {
+  sidebar = sidebar.filter(
+    (entry: any) => entry.label === "Documentación Técnica",
+  );
+} else if (isServidores) {
+  sidebar = sidebar.filter(
+    (entry: any) => entry.label === "Configuración de Servidores",
+  );
+} else if (Astro.url.pathname.includes("/recursos/")) {
+  sidebar = sidebar.filter((entry: any) => entry.label === "Recursos");
+}
+---
+
+<SidebarPersister>
+  <SidebarSublist sublist={sidebar} />
+</SidebarPersister>
+
+<div class="md:sl-hidden">
+  <MobileMenuFooter />
+</div>
