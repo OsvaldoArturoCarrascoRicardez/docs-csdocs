@@ -53,7 +53,7 @@ sudo ufw enable
 
 Edita `/etc/ssh/sshd_config` para aplicar estas mejoras:
 
-```conf
+```nginx
 PermitRootLogin no           # Prohibir login a root
 PasswordAuthentication no    # Forzar llaves SSH
 Port 2222                    # Opcional: Cambiar puerto por defecto

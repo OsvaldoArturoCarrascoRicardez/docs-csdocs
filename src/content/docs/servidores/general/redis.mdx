@@ -24,7 +24,7 @@ sudo apt install redis-server -y
 
 Edita `/etc/redis/redis.conf`:
 
-```conf
+```nginx
 # Asegurar que solo escuche localmente o en IPs autorizadas
 bind 127.0.0.1 ::1
 
@@ -55,7 +55,7 @@ redis-cli ping
 
 Configura tu archivo `.env` para aprovechar Redis:
 
-```env
+```dotenv
 CACHE_DRIVER=redis
 SESSION_DRIVER=redis
 REDIS_HOST=127.0.0.1
